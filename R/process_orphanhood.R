@@ -38,7 +38,7 @@ prop_15_17 <- tmp$prop_15_17
 #################
 
 # Pre-computed in `orphanhood.R`
-inc_tab <- readRDS(file = paste("ORPHANHOOD/SUMMARY/municipality_inc_orphans", file_name, ".RDS", sep = ""))
+inc_tab <- readRDS(file = paste("ORPHANHOOD/RESULTS/municipality_inc_orphans", file_name, ".RDS", sep = ""))
 
 if (type.input != "Municipality") {
   tmp_orphans <- inc_tab$orphans
@@ -85,7 +85,7 @@ write_csv(x = inc_tab$orphans_per_child, file = paste("ORPHANHOOD/POSTPROCESSING
 if (type.input != "Municipality") { # As prevalence is computed for departments (or larger) only
   
   # Pre-computed in `orphanhood.R`
-  pre_tab <- readRDS(file = paste("ORPHANHOOD/SUMMARY/department_pre_orphans", file_name, ".RDS", sep = ""))
+  pre_tab <- readRDS(file = paste("ORPHANHOOD/RESULTS/department_pre_orphans", file_name, ".RDS", sep = ""))
   
   if (type.input != "Department") {
     tmp_orphans <- pre_tab$orphans

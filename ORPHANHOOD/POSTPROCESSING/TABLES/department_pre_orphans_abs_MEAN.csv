@@ -1,0 +1,67 @@
+dep,dep_name,gender,n_orp
+5,Antioquia,Female,20314.26468734
+8,Atlántico,Female,8346.38299898
+11,Bogotá,Female,20678.90110135
+13,Bolívar,Female,7322.8854540600005
+15,Boyacá,Female,3740.40009564
+17,Caldas,Female,3012.79924387
+18,Caquetá,Female,1561.54202347
+19,Cauca,Female,5001.63134948
+20,Cesar,Female,4195.97411821
+23,Córdoba,Female,6217.17090979
+25,Cundinamarca,Female,8430.30235366
+27,Chocó,Female,2296.63668208
+41,Huila,Female,3926.96108942
+44,La Guajira,Female,3743.1616404300003
+47,Magdalena,Female,4951.92388959
+50,Meta,Female,3291.39922417
+52,Nariño,Female,5729.65514989
+54,Norte de Santander,Female,5352.45432095
+63,Quindío,Female,1626.56642472
+66,Risaralda,Female,2879.07865309
+68,Santander,Female,6734.024248629999
+70,Sucre,Female,3270.8435484
+73,Tolima,Female,4030.70526611
+76,Valle del Cauca,Female,13485.16756046
+81,Arauca,Female,1029.3154530900001
+85,Casanare,Female,1353.31217232
+86,Putumayo,Female,1211.9950531499999
+88,"Archipelago de San Andrés, Providencia y Santa Catalina",Female,177.17873833
+91,Amazonas,Female,328.93238146
+94,Guainía,Female,166.70457202
+95,Guaviare,Female,299.4969522
+97,Vaupés,Female,133.01453225
+99,Vichada,Female,429.77351656999997
+5,Antioquia,Male,60356.434125060005
+8,Atlántico,Male,24841.04255413
+11,Bogotá,Male,60644.737190859996
+13,Bolívar,Male,22568.51957414
+15,Boyacá,Male,11821.465366909999
+17,Caldas,Male,9395.89572285
+18,Caquetá,Male,4943.15217683
+19,Cauca,Male,15422.34366751
+20,Cesar,Male,12348.059509030001
+23,Córdoba,Male,19287.91714095
+25,Cundinamarca,Male,25695.28714515
+27,Chocó,Male,6517.12568476
+41,Huila,Male,12226.18653537
+44,La Guajira,Male,10442.88366572
+47,Magdalena,Male,15274.57245342
+50,Meta,Male,10632.56058882
+52,Nariño,Male,17380.32738387
+54,Norte de Santander,Male,16382.58602509
+63,Quindío,Male,4985.31892281
+66,Risaralda,Male,8758.92028586
+68,Santander,Male,20866.9203852
+70,Sucre,Male,10375.15016481
+73,Tolima,Male,12942.45045701
+76,Valle del Cauca,Male,39765.23880359
+81,Arauca,Male,3216.83560674
+85,Casanare,Male,4237.03635742
+86,Putumayo,Male,3707.2714532200002
+88,"Archipelago de San Andrés, Providencia y Santa Catalina",Male,527.96607435
+91,Amazonas,Male,1071.94072494
+94,Guainía,Male,537.87909727
+95,Guaviare,Male,1098.2519219
+97,Vaupés,Male,491.62442265
+99,Vichada,Male,1513.8925809

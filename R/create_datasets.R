@@ -111,7 +111,7 @@ mort_age_fem <- mort_summ %>% filter(Gender == "Female") %>% dplyr::select(Age) 
 mort_age_mal <- mort_summ %>% filter(Gender ==   "Male") %>% dplyr::select(Age) %>% unique() %>% c() %>% unlist() %>% unname() %>% as.character()
 
 # For each Monte Carlo sample, create one data set for fertility and one data set for mortality
-for (nn in 322:nmcs) {
+for (nn in 1001:2000) { #nmcs) {
   
   print(paste("Sample: ", sprintf("%04d", nn), " (out of ", nmcs, ")", sep = ""))
   

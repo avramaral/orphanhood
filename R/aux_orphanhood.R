@@ -70,11 +70,15 @@ process_number_children_year <- function (yy, type.input, fertility_rates, per1K
   print("Processing children of male individuals...")
   count <- 1
   if (type.input != "National") { pb <- txtProgressBar(min = 1, max = length(locs), initial = 1) }
+  
+  partial_result_mal <- list()
+  partial_result_fem <- list()
+  partial_result_all <- list()
   for (l in locs) {
     tmp <- data_m %>% filter(loc == l)
     group <- paste("col_", gsub(" ", "-", yy), "_", gsub(" ", "-", l), sep = "")
     
-    process_children_father_55_plus_year(type.input = type.input, yy = yy, group = group, data_m = tmp)
+    partial_result_mal[[as.character(group)]] <- process_children_father_55_plus_year(type.input = type.input, yy = yy, group = group, data_m = tmp)
     
     count <- count + 1
     if (type.input != "National") { setTxtProgressBar(pb, count) }
@@ -95,12 +99,19 @@ process_number_children_year <- function (yy, type.input, fertility_rates, per1K
     tmp <- data_f %>% filter(loc == l)
     group <- paste("col_", gsub(" ", "-", yy), "_", gsub(" ", "-", l), sep = "")
     
-    process_children_all_year(type.input = type.input, yy = yy, group = group, data_f = tmp)
+    partial_result_fem[[as.character(group)]] <- process_children_all_year(type.input = type.input, yy = yy, group = group, data_f = tmp, children_mal = partial_result_mal[[as.character(group)]])
+    
+    partial_result_all[[as.character(group)]] <- list(child_all_list_both = partial_result_fem[[as.character(group)]]$child_all_list_both, children = partial_result_fem[[as.character(group)]]$children)
+    
+    partial_result_fem[[as.character(group)]]$child_all_list_both <- NULL
+    partial_result_fem[[as.character(group)]]$children            <- NULL
     
     count <- count + 1
     if (type.input != "National") { setTxtProgressBar(pb, count) }
   }
   if (type.input != "National") { close(pb) }
+  
+  list(children_fem = partial_result_fem, children_mal = partial_result_mal, children_all = partial_result_all)
 }
 
 # Process the number of children for male individuals
@@ -887,7 +898,7 @@ process_children_father_55_plus_year <- function (type.input, yy, group, data_m,
   children <- as.data.frame(children)
   names(children) = paste(seq(0:17) - 1, " years", sep = "")
   
-  write_csv(x = children, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_raw_m.csv", sep = ""))
+  # write_csv(x = children, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_raw_m.csv", sep = ""))
   
   plot_c <- as.data.frame(as.numeric(as.character(unlist(children))))
   plot_c$father_age <- rep(1:100, 18)
@@ -895,19 +906,21 @@ process_children_father_55_plus_year <- function (type.input, yy, group, data_m,
   setnames(plot_c, 1, "prob")
   plot_c$gender = "male"
   
-  write_csv(x = plot_c, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_m.csv", sep = ""))
+  # write_csv(x = plot_c, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_m.csv", sep = ""))
   
   ddf <- as.data.frame(apply(children, 1, sum))
   names(ddf) <- "children"
   ddf$gender <- "male"
   ddf$age <- 1:100
   
-  write_csv(x = ddf, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_m.csv", sep = ""))
+  # write_csv(x = ddf, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_m.csv", sep = ""))
+
+  list(child_raw_m = children, child_all_list_m = plot_c, children_m = ddf)  
 }
 
 # Process the number of children for female individuals
 
-process_children_all_year <- function (type.input, yy, group, data_f, ...) {
+process_children_all_year <- function (type.input, yy, group, data_f, children_mal, ...) {
   
   children <- matrix(rep(0, 100 * 18), nrow = 100)
   names(children) <- paste(seq(0:17), "years", sep = "")
@@ -1577,33 +1590,38 @@ process_children_all_year <- function (type.input, yy, group, data_f, ...) {
   
   children <- as.data.frame(children)
   names(children) <- paste(seq(0:17) - 1, " years", sep = "")
-  write_csv(x = children, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_raw_f.csv", sep = ""))
+  # write_csv(x = children, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_raw_f.csv", sep = ""))
   
   plot_c <- as.data.frame(as.numeric(as.character(unlist(children))))
   plot_c$mother_age <- rep(1:100, 18)
   plot_c$child_age <- sort(rep(seq(18) - 1, 100))
   setnames(plot_c, 1, "prob")
   plot_c$gender <- "female"
-  write_csv(x = plot_c, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_f.csv", sep = ""))
+  # write_csv(x = plot_c, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_f.csv", sep = ""))
   
   setnames(plot_c, "mother_age", "parents_age")
-  plott <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_m.csv", sep = ""))
+  # plott <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_m.csv", sep = ""))
+  plott <- children_mal$child_all_list_m
   setnames(plott, "father_age", "parents_age")
   plot_all <- rbind(plot_c, plott)
-  write_csv(x = plot_all, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_both.csv", sep = ""))
+  # write_csv(x = plot_all, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_both.csv", sep = ""))
   
   ddf <- as.data.frame(apply(children, 1, sum))
   names(ddf) <- "children"
   ddf$gender <- "female"
   ddf$age <- 1:100
-  write_csv(x = ddf, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_f.csv", sep = ""))
+  # write_csv(x = ddf, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_f.csv", sep = ""))
   
-  ddf   <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_f.csv", sep = ""))
-  ddf_2 <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_m.csv", sep = ""))
+  # ddf   <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_f.csv", sep = ""))
+  # ddf_2 <- read.csv(paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children_m.csv", sep = ""))
+  ddf_2 <- children_mal$children_m
+  
   # Truncate fertility for men for analysis (unnecessary, as I already set the limiting fertility age for men to 59)
   ddf_2$children[ddf_2$age > 77] <- 0
-  ddf <- rbind(ddf, ddf_2)
-  write_csv(x = ddf, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children.csv", sep = ""))
+  ddf_all <- rbind(ddf, ddf_2)
+  # write_csv(x = ddf_all, file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children.csv", sep = ""))
+
+  list(child_raw_f = children, child_all_list_f = plot_c, child_all_list_both = plot_all, children_f = ddf, children = ddf_all)  
 }
 
 ########################################
@@ -1612,7 +1630,7 @@ process_children_all_year <- function (type.input, yy, group, data_f, ...) {
 
 # Process the number of orphans - MAIN FUNCTION
 
-process_nb_orphans_table_dep_national_year <- function (yy, type.input, death_count, ...) {
+process_nb_orphans_table_dep_national_year <- function (yy, type.input, death_count, number_children_yy_all, ...) {
   
   d_deaths <- death_count %>% filter(year == yy)
   d_deaths <- na.omit(d_deaths)
@@ -1623,6 +1641,7 @@ process_nb_orphans_table_dep_national_year <- function (yy, type.input, death_co
   dor <- vector('list', length(unique(locs)))
   dor.age <- vector('list', length(unique(locs)))
   
+  if (type.input != "National") { pb <- txtProgressBar(min = 1, max = length(locs), initial = 1) }
   for (l in locs) {
     
     # Process the orphans by age of adults
@@ -1632,30 +1651,40 @@ process_nb_orphans_table_dep_national_year <- function (yy, type.input, death_co
     # If due to suppression issue, the subset table contains no data, then we skip that
     if (nrow(tmp) > 0) {
       group <- paste0("col", "_", gsub(' ', '-', yy), "_", gsub(' ', '-', l))
+      number_children_yy_all_group <- number_children_yy_all[[as.character(group)]]
       
       # print(paste("Processing orphans by age of parents in file: ", group, "...", sep = ""))
-      out <- process_orphans_dep_national(d_merge = tmp, group = group)
+      out <- process_orphans_dep_national(d_merge = tmp, group = group, number_children_yy_all_group = number_children_yy_all_group)
       dor[[i]] <- out$d_age
       
       # print(paste("Processing orphans by age of children ...", sep = ""))
-      out.age <- process_orphans_with_age(d_merge = tmp, group = group, l = l)
+      out.age <- process_orphans_with_age(d_merge = tmp, group = group, l = l, number_children_yy_all_group = number_children_yy_all_group)
       dor.age[[i]] <- out.age$d_age
       
     }
+    if (type.input != "National") { setTxtProgressBar(pb, i) }
   }
+  if (type.input != "National") { close(pb) }
+  
   
   tmp <- data.table::rbindlist(dor, use.names = TRUE, fill = TRUE)
   tmp.age <- data.table::rbindlist(dor.age, use.names = TRUE, fill = TRUE)
   
-  write_csv(x = tmp,     file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_summary_",          yy, ".csv", sep = ""))
-  write_csv(x = tmp.age, file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_with_age_summary_", yy, ".csv", sep = ""))
+  # write_csv(x = tmp,     file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_summary_",          yy, ".csv", sep = ""))
+  # write_csv(x = tmp.age, file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_with_age_summary_", yy, ".csv", sep = ""))
+  
+  partial_result <- list()
+  partial_result[[as.character(paste("parents_deaths_orphans_summary_",          yy, sep = ""))]] <- tmp
+  partial_result[[as.character(paste("parents_deaths_orphans_with_age_summary_", yy, sep = ""))]] <- tmp.age
+  partial_result
 }
 
 # Process the number of orphans without age
 
-process_orphans_dep_national <- function (d_merge, group, ...) {
+process_orphans_dep_national <- function (d_merge, group, number_children_yy_all_group, ...) {
   
-  d_children <- as.data.table(read_csv(file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children.csv", sep = ""), col_types = cols()))
+  # d_children <- as.data.table(read_csv(file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_children.csv", sep = ""), col_types = cols()))
+  d_children <- as.data.table(number_children_yy_all_group$children)
   # ANDRE #
   d_children_fem <- d_children %>% as_tibble() %>% filter(gender == "female")
   d_children_fem <- d_children_fem %>% mutate(age = age %/% 5) %>% mutate(age = paste0(age * 5, '-' , (age + 1) * 5 - 1))
@@ -1693,7 +1722,7 @@ process_orphans_dep_national <- function (d_merge, group, ...) {
   # d_m1[, orphans := round(deaths * nb_c)]
   d_m1[, orphans := deaths * nb_c]
   d_m1$age <- factor(d_m1$age, levels = c("10-14", "15-19", "20-24", "25-29", "30-34", "35-39" ,"40-44", "45-49", "50-54", "50-66", "55-59", "60-76"))
-  write_csv(x = d_m1, file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/parents_deaths_orphans_", group, ".csv", sep = ""))
+  # write_csv(x = d_m1, file = paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/parents_deaths_orphans_", group, ".csv", sep = ""))
   
   d_summary <- d_m1 %>% select(age, gender, loc, deaths, orphans)
   d_summary$age <- as.character(d_summary$age)
@@ -1708,11 +1737,12 @@ process_orphans_dep_national <- function (d_merge, group, ...) {
 
 # Process the number of orphans with age
 
-process_orphans_with_age <- function(d_merge, group, ...) {
+process_orphans_with_age <- function(d_merge, group, number_children_yy_all_group, ...) {
   
   # Additional analysis: age of orphans estimation
   # All contains the huge matrix which are really useful to explore the age of children
-  d_children <- as.data.table(read_csv(file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_both.csv", sep = ""), col_types = cols()))
+  # d_children <- as.data.table(read_csv(file = paste("ORPHANHOOD/CHILDREN/", toupper(type.input), "/", group, "_child_all_list_both.csv", sep = ""), col_types = cols()))
+  d_children <- as.data.table(number_children_yy_all_group$child_all_list_both)
   # ANDRE #
   d_children_fem <- d_children %>% as_tibble() %>% filter(gender == "female")
   d_children_fem <- d_children_fem %>% mutate(age = parents_age %/% 5) %>% mutate(age = paste0(age * 5, '-' , (age + 1) * 5 - 1))
@@ -1764,18 +1794,26 @@ process_orphans_with_age <- function(d_merge, group, ...) {
 
 # Create table with number of orphans
 
-orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_children = 100000, file_name = "", ...) {
+orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_children = 100000, file_name = "", number_orphans = number_orphans, ...) {
   
   if (type.input == "Municipality") { tmp_loc <- "mun" } else if (type.input == "Department") { tmp_loc <- "dep" } else if (type.input == "Region") { tmp_loc <- "reg" } else if (type.input == "National") { tmp_loc <- "nat" } else { stop("Choose a valid `type.input`.") }
   
-  infiles <- (list.files(path = paste("ORPHANHOOD/RESULTS/", toupper(type.input), sep = ""), pattern = paste(type.input, "_parents_deaths_orphans_summary", sep = ""), full.names = TRUE, recursive = FALSE))
+  # infiles <- (list.files(path = paste("ORPHANHOOD/RESULTS/", toupper(type.input), sep = ""), pattern = paste(type.input, "_parents_deaths_orphans_summary", sep = ""), full.names = TRUE, recursive = FALSE))
+  # orphans_all_years <- data.table()
+  # for (i in seq_len(length(infiles))) {
+  #   infile <- infiles[i]
+  #   orphans_all_years <- rbind(orphans_all_years, data.table(read.csv(infile)))
+  # }
+  
   orphans_all_years <- data.table()
-  for (i in seq_len(length(infiles))) {
-    infile <- infiles[i]
-    orphans_all_years <- rbind(orphans_all_years, data.table(read.csv(infile)))
+  all_yy <- names(number_orphans)
+  for (yy in all_yy) {
+    tmp <- number_orphans[[as.character(yy)]]
+    tmp <- tmp[[paste("parents_deaths_orphans_summary_", yy, sep = "")]]
+    orphans_all_years <- rbind(orphans_all_years, tmp)
   }
   
-  write_csv(x = orphans_all_years, file = paste("ORPHANHOOD/SUMMARY/orphans_by_age_gender_year_loc_", tmp_loc, file_name, ".csv", sep = ""))
+  # write_csv(x = orphans_all_years, file = paste("ORPHANHOOD/SUMMARY/orphans_by_age_gender_year_loc_", tmp_loc, file_name, ".csv", sep = ""))
   
   orphans_locs_years <- orphans_all_years[, list(orphans = sum(orphans)), by = c("loc", "year")]
   orphans_locs_years <- as_tibble(orphans_locs_years) %>% mutate({{tmp_loc}} := loc) %>% select(all_of(tmp_loc), year, orphans)
@@ -1790,7 +1828,7 @@ orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_ch
   
   orphans_table <- orphans_locs_years %>% pivot_wider(names_from = year, values_from = orphans)
   setnames(orphans_table, paste(tmp_loc, "_name", sep = ""), type.input)
-  write_csv(x = orphans_table, file = paste("ORPHANHOOD/SUMMARY/orphans_by_year_", tmp_loc, file_name, ".csv", sep = ""))
+  # write_csv(x = orphans_table, file = paste("ORPHANHOOD/SUMMARY/orphans_by_year_", tmp_loc, file_name, ".csv", sep = ""))
   
   ##############################
   ##############################
@@ -1804,7 +1842,7 @@ orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_ch
   # No rounding
   # orphans_and_rate <- orphans_and_rate %>% mutate(orphan_rate = ceiling(orphans * per_n_children / children))
   orphans_and_rate <- orphans_and_rate %>% mutate(orphan_rate = (orphans * per_n_children / children))
-  write_csv(x = orphans_and_rate, file = paste("ORPHANHOOD/SUMMARY/orphans_and_rate_by_year_", tmp_loc, "_list_per_", as.integer(per_n_children), file_name, ".csv", sep = ""))
+  # write_csv(x = orphans_and_rate, file = paste("ORPHANHOOD/SUMMARY/orphans_and_rate_by_year_", tmp_loc, "_list_per_", as.integer(per_n_children), file_name, ".csv", sep = ""))
   
   colnames(orphans_and_rate)[1] <- tmp_loc
   if (type.input != "Municipality") {
@@ -1813,7 +1851,9 @@ orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_ch
     orphans_per_child <- left_join(x = orphans_and_rate, y = tmp_geo_info, by = tmp_loc) %>% mutate(mun_name = paste(mun, " ", mun_name, sep = "")) %>% select(all_of(paste(tmp_loc, "_name", sep = "")), year, orphan_rate)
   }
   orphans_rate_table <- orphans_per_child %>% pivot_wider(names_from = year, values_from = orphan_rate) 
-  write_csv(x = orphans_rate_table, file = paste("ORPHANHOOD/SUMMARY/orphans_rate_by_year_", tmp_loc, "_per_", as.integer(per_n_children), file_name, ".csv", sep = ""))
+  # write_csv(x = orphans_rate_table, file = paste("ORPHANHOOD/SUMMARY/orphans_rate_by_year_", tmp_loc, "_per_", as.integer(per_n_children), file_name, ".csv", sep = ""))
+
+  list(orphans_all_years = orphans_all_years, orphans_table = orphans_table, orphans_and_rate = orphans_and_rate, orphans_rate_table = orphans_rate_table)
 }
 
 ########################################
@@ -1822,11 +1862,12 @@ orphan_table <- function (type.input, population, prop_15_17, geo_info, per_n_ch
 
 # INCIDENCE
 
-generate_incidence_table <- function (type.input, per_n_children, geo_info, should_round = FALSE, file_name = "", ...) {
+generate_incidence_table <- function (type.input, per_n_children, geo_info, should_round = FALSE, file_name = "", orphan_table_res, ...) {
   
   if (type.input == "Municipality") { tmp_loc <- "mun" } else if (type.input == "Department") { tmp_loc <- "dep" } else if (type.input == "Region") { tmp_loc <- "reg" } else if (type.input == "National") { tmp_loc <- "nat" } else { stop("Choose a valid `type.input`.") }
   
-  orphans_all_years <- read_csv(file = paste("ORPHANHOOD/SUMMARY/orphans_by_age_gender_year_loc_", tmp_loc, file_name, ".csv", sep = ""))
+  # orphans_all_years <- read_csv(file = paste("ORPHANHOOD/SUMMARY/orphans_by_age_gender_year_loc_", tmp_loc, file_name, ".csv", sep = ""))
+  orphans_all_years <- orphan_table_res$orphans_all_years
   orphans_all_years <- as.data.table(orphans_all_years)
   
   ##############################
@@ -1909,7 +1950,7 @@ generate_incidence_table <- function (type.input, per_n_children, geo_info, shou
 
 # PREVALENCE
 
-generate_prevalence_table <- function (type.input, per_n_children, geo_info, should_round = FALSE, ...) {
+generate_prevalence_table <- function (type.input, per_n_children, geo_info, should_round = FALSE, number_orphans, ...) {
   
   if (should_round) { decimal_places <- 0 } else { decimal_places <- 8 }
   
@@ -1934,7 +1975,7 @@ generate_prevalence_table <- function (type.input, per_n_children, geo_info, sho
   } else if (type.input == "National") {
     pop_all_years <- pop_all_years %>% rename(nat = loc)
     pop_all_years <- pop_all_years %>% left_join(y = geo_info[, c("mun", "nat")], by = "mun") %>% dplyr::select(year, nat, gender, age, population) %>% group_by(gender, nat, year, age) %>% summarise(population = sum(population)) %>% ungroup() %>% rename(loc = nat)
-  } else { error("Choose a valid `type.input`.") }
+  } else { stop("Choose a valid `type.input`.") }
   
   
   nb_orphs_fem       <- nb_orphs_mal     <- list()
@@ -1948,7 +1989,9 @@ generate_prevalence_table <- function (type.input, per_n_children, geo_info, sho
     
     j <- j + 1
     
-    orphans_by_age <- read_csv(paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_with_age_summary_", y, ".csv", sep = ""), col_types = cols())
+    # orphans_by_age <- read_csv(paste("ORPHANHOOD/RESULTS/", toupper(type.input), "/", type.input, "_parents_deaths_orphans_with_age_summary_", y, ".csv", sep = ""), col_types = cols())
+    orphans_by_age <- number_orphans[[as.character(y)]][[paste("parents_deaths_orphans_with_age_summary_", y, sep = "")]]
+    
     # Due to rounding effects, the numbers in `department_parents_deaths_orphans_with_age_summary` may be slightly different than the ones in `department_parents_deaths_orphans_summary`.
     orphans_by_age <- orphans_by_age %>% filter(child_age <= age_ch)
     locs <- orphans_by_age %>% select(loc) %>% unique() %>% c() %>% unlist() %>% unname()

@@ -1,10 +1,11 @@
 source("R/header.R")
-source("R/aux.R")
 source("R/header_plotting.R")
+source("R/aux.R")
+source("R/aux_plot.R")
 
-###########
-### MPI ###
-###########
+#################
+### READ DATA ###
+#################
 
 data <- readRDS(file = "DATA/mortality_bias_data.RDS")
 
@@ -21,8 +22,8 @@ isl1_mpi <- mpi_info %>% filter((mun %in% c(88001)))
 isl2_mpi <- mpi_info %>% filter((mun %in% c(88564)))
 mpi_info <- mpi_info %>% filter(!(mun %in% c(88001, 88564)))
 
-p_raw_tmp <- plot_maps(data = mpi_info, my_var = "mpi", tt = "", nm_var = "MPI", ll = c(0, 100))
-ggsave(filename = paste("docs/images/MPI.jpeg" , sep = ""), plot = p_raw_tmp , width = 1500, height = 1500, units = c("px"), dpi = 300, bg = "white")
+p_raw_tmp <- plot_maps_isl(data = mpi_info, isl1 = isl1_mpi, isl2 = isl2_mpi, my_var = "mpi", tt = "", nm_var = "MPI", ll = c(0, 100))
+ggsave(filename = paste("docs/images/MPI.jpeg" , sep = ""), plot = p_raw_tmp , width = 2000, height = 1800, units = c("px"), dpi = 300, bg = "white")
 
 ##################
 ### ORPHANHOOD ###
